@@ -1,0 +1,7 @@
+{%- set env = load_env(".env") -%}
+{%- set pn = env.get("PROJECT_NAME") -%}
+{%- set au = env.get("AUTHOR") -%}
+
+# {{ pn or project_name }}
+
+Author: {{ au or author }}

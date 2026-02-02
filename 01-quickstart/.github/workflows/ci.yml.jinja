@@ -1,0 +1,29 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Install
+        run: uv sync
+      - name: Test
+        run: uv run pytest -q
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    uses: your-org/ci-workflows-repo/.github/workflows/reusable-ci-python.yml@v1
+    with:
+      python-version: "3.11"
+      working-directory: "backend"
+      uv-sync-args: "--group dev"
+      pytest-args: "-q"
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

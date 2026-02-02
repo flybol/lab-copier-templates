@@ -1,0 +1,42 @@
+name: Deploy
+
+on:
+    push:
+        branches:
+            - main
+            - staging
+            - dev
+
+permissions:
+    contents: read
+
+jobs:
+    pick-env:
+        runs-on: ubuntu-latest
+        outputs:
+            env_name: ${{ steps.out.outputs.env_name }}
+            env_url: ${{ steps.out.outputs.env_url }}
+        steps:
+            - id: out
+              run: |
+                  BRANCH="${GITHUB_REF_NAME}"
+                  if [ "$BRANCH" = "main" ]; then
+                    echo "env_name=prod" >> $GITHUB_OUTPUT
+                    echo "env_url=https://prod.example.com" >> $GITHUB_OUTPUT
+                  elif [ "$BRANCH" = "staging" ]; then
+                    echo "env_name=staging" >> $GITHUB_OUTPUT
+                    echo "env_url=https://staging.example.com" >> $GITHUB_OUTPUT
+                  else
+                    echo "env_name=dev" >> $GITHUB_OUTPUT
+                    echo "env_url=https://dev.example.com" >> $GITHUB_OUTPUT
+                  fi
+
+    deploy:
+        needs: pick-env
+        uses: ./.github/workflows/reusable-deploy.yml
+        with:
+            environment_name: ${{ needs.pick-env.outputs.env_name }}
+            deploy_url: ${{ needs.pick-env.outputs.env_url }}
+            working-directory: backend
+        # ✅ secrets 传不传都行；环境 secrets 在 reusable 的 environment job 里获取
+        secrets: inherit

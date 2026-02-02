@@ -1,0 +1,23 @@
+project_name:
+  type: str
+  default: demo_app
+
+backend_root_path:
+  type: str
+  default: backend
+
+frontend_root_path:
+  type: str
+  default: frontend
+
+run_post_init:
+  type: bool
+  default: true
+  help: "是否在生成后执行初始化脚本？"
+
+module_name:
+  type: str
+  default: app
+tasks:
+  - command: ["python", "scripts/project_init.py", "{{ package_name }}"]
+    when: "{{ run_post_init and _copier_phase == 'post' }}"

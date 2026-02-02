@@ -1,0 +1,55 @@
+name: Reusable Deploy
+
+on:
+    workflow_call:
+        inputs:
+            environment_name:
+                description: "dev | staging | prod"
+                required: true
+                type: string
+            deploy_url:
+                description: "Optional environment URL to display in GitHub UI"
+                required: false
+                type: string
+                default: ""
+            working-directory:
+                description: "Monorepo dir"
+                required: false
+                type: string
+                default: "backend"
+        secrets:
+            # 注意：环境 secrets 不用从 caller 传；这里仅预留“非环境类”密钥（可选）
+            GH_TOKEN:
+                required: false
+
+# ✅ 最小权限：默认只读代码
+permissions:
+    contents: read
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        # ✅ 关键：在“被调用方 job”上声明 environment，才能拿到对应 environment secrets
+        environment:
+            name: ${{ inputs.environment_name }}
+            url: ${{ inputs.deploy_url }}
+
+        defaults:
+            run:
+                shell: bash
+                working-directory: ${{ inputs.working-directory }}
+
+        steps:
+            - uses: actions/checkout@v4
+
+            # 示例：这里用最小化的“演示部署”，你换成 rsync/systemd/k8s 都行
+            - name: Deploy (example)
+              env:
+                  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+                  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+                  DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+              run: |
+                  echo "Deploying to env=${{ inputs.environment_name }}"
+                  echo "Host=$DEPLOY_HOST User=$DEPLOY_USER"
+                  echo "URL=$DEPLOY_URL"

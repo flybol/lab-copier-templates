@@ -1,0 +1,53 @@
+# copier.yml
+_min_copier_version: "9.0.0"
+_templates_suffix: ".jinja"
+
+# 可选：启用 .env 覆盖（不想要就删掉这段）
+_jinja_extensions:
+  - copier_extensions.py:load_env
+
+project_name:
+  type: str
+  default: "demo-app"
+
+python_pkg:
+  type: str
+  default: "demo_app"
+
+author:
+  type: str
+  default: "datacool"
+
+# 模块开关：最小企业常用 4 件套
+enable_backend:
+  type: bool
+  default: true
+
+enable_ci:
+  type: bool
+  default: true
+
+enable_docker:
+  type: bool
+  default: true
+
+enable_frontend:
+  type: bool
+  default: false
+
+# 统一约束：固定骨架 + 条件删除不需要的目录（不写自定义脚本，仅一条命令）
+_tasks:
+  - command: python -c "import shutil; shutil.rmtree('frontend', ignore_errors=True)"
+    when: "{{ not enable_frontend }}"
+  - command: python -c "import shutil; shutil.rmtree('.github', ignore_errors=True)"
+    when: "{{ not enable_ci }}"
+  - command: python -c "import shutil; shutil.rmtree('ops', ignore_errors=True)"
+    when: "{{ not enable_docker }}"
+
+# ✅ 企业关键：update 时“尽量不覆盖用户改过的文件”
+# 默认 Copier 就很克制，但你可以进一步把“容易被改的文件”标记为不覆盖。
+_skip_if_exists:
+  - "README.md"
+  - "backend/pyproject.toml"
+  - ".github/workflows/ci.yml"
+  - "ops/docker-compose.yml"

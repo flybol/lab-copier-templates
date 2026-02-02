@@ -1,0 +1,61 @@
+name: Reusable CI (Python)
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version"
+        required: false
+        type: string
+        default: "3.11"
+      uv-sync-args:
+        description: "Extra args for uv sync (e.g. --group dev)"
+        required: false
+        type: string
+        default: ""
+      pytest-args:
+        description: "Args for pytest"
+        required: false
+        type: string
+        default: "-q"
+      working-directory:
+        description: "Run commands in this directory"
+        required: false
+        type: string
+        default: "."
+    secrets:
+      # 预留：如果你将来要拉私有依赖，可传 token（不传也不影响）
+      GH_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4 :contentReference[oaicite:1]{index=1}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7 :contentReference[oaicite:2]{index=2}
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+
+      - name: Install dependencies
+        env:
+          # 可选：给 uv / git 用于拉私有依赖
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          uv sync ${{ inputs.uv-sync-args }}
+
+      - name: Run tests
+        run: |
+          uv run pytest ${{ inputs.pytest-args }}
